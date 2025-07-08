@@ -6,18 +6,23 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
     <title>Runner</title>
   </head>
-  <body style="text-align: left; padding: 0; border: 0; margin: 0;">
+  <body style="text-align: left; padding: 0; border: 0; margin: 0; background-color: #1A2321;">
     <!-- Modified: centered loading bar container -->
     <div id="unity-loading-bar" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:300px; height:20px; background:#444; z-index:999; border-radius:10px; padding:2px;">
       <div id="unity-progress-bar" style="width:0%; height:100%; background:#29d; border-radius:8px; transition:width 0.3s ease;"></div>
     </div>
 
     <canvas id="unity-canvas" width=960 height=600 tabindex="-1"
-      style="width:100%; height:100%; position:fixed; background: #231F20"></canvas>
+      style="width:100%; height:100%; position:fixed; background: #231F20; display:none;"></canvas>
 
+
+    <!-- Logo -->
+    <div id="unity-logo" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -70%); z-index:1001; display:block;">
+      <img src="logo1.PNG" alt="Logo" style="max-width:500px; max-height:350px; width:auto; height:auto;">
+    </div>
 
     <!-- Play button -->
-    <div id="unity-play-button" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:120px; height:120px; background:rgba(0,0,0,0.8); border:none; border-radius:50%; cursor:pointer; z-index:1001; display:none; align-items:center; justify-content:center;">
+    <div id="unity-play-button" style="position:fixed; top:50%; left:50%; transform:translate(-50%, 30%); width:120px; height:120px; background:rgba(0,0,0,0.8); border:none; border-radius:50%; cursor:pointer; z-index:1001; display:none; align-items:center; justify-content:center;">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
         <path d="M8 5v14l11-7z"/>
       </svg>
@@ -29,6 +34,7 @@
       var loadingBar = document.getElementById("unity-loading-bar");
       var progressBar = document.getElementById("unity-progress-bar");
       var playButton = document.getElementById("unity-play-button");
+      var logo = document.getElementById("unity-logo");
       var unityInstancePromise;
 
       unityInstancePromise = createUnityInstance(canvas, {
@@ -51,10 +57,10 @@
         
         // Play button click handler
         playButton.onclick = () => {
+          logo.style.display = "none";
           playButton.style.display = "none";
-            unityInstance.SetFullscreen(1);
-          
-          
+          canvas.style.display = "block";
+          unityInstance.SetFullscreen(1);
         };
         
         return unityInstance;
@@ -63,4 +69,5 @@
       });
     </script>
   </body>
+</html>
 </html>
