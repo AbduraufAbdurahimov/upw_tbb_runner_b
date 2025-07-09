@@ -65,28 +65,39 @@
       #confirm-name-btn:hover {
         opacity: 0.8;
       }
+      
+      /* Fullscreen button styles */
+      #fullscreen-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        background: rgba(42, 58, 56, 0.8);
+        border: 2px solid #29d;
+        border-radius: 8px;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1003;
+        transition: all 0.3s ease;
+      }
+      
+      #fullscreen-btn:hover {
+        background: rgba(42, 58, 56, 1);
+        transform: scale(1.1);
+      }
+      
+      #fullscreen-btn svg {
+        width: 20px;
+        height: 20px;
+        fill: #29d;
+      }
     </style>
   </head>
   <body style="text-align: left; padding: 0; border: 0; margin: 0; background-color: #1A2321;">
-    <script>
-  function requestFullscreenAndLockOrientation(canvasId) {
-    var canvas = document.getElementById(canvasId);
     
-    // Запрос на fullscreen
-    if (canvas.requestFullscreen) {
-      canvas.requestFullscreen().then(() => {
-        // Пытаемся заблокировать ориентацию
-        if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock("landscape").catch(function(err) {
-            console.warn("Ориентация не заблокирована:", err);
-          });
-        }
-      }).catch((err) => {
-        console.error("Не удалось включить fullscreen:", err);
-      });
-    }
-  }
-</script>
     <!-- Centered container for logo and loading bar -->
     <div id="unity-loading-container" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); display:flex; flex-direction:column; align-items:center; gap:30px; z-index:1001;">
       <!-- Logo -->
@@ -115,6 +126,13 @@
       </div>
     </div>
 
+    <!-- Fullscreen button -->
+    <button id="fullscreen-btn" title="Enter Fullscreen">
+      <svg viewBox="0 0 24 24">
+        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+      </svg>
+    </button>
+
     <canvas id="unity-canvas" width=960 height=600 tabindex="-1"
       style="width:100%; height:100%; position:fixed; background: #231F20; display:none;"></canvas>
 
@@ -129,6 +147,7 @@
       var playerNameModal = document.getElementById("player-name-modal");
       var playerNameInput = document.getElementById("player-name-input");
       var confirmNameBtn = document.getElementById("confirm-name-btn");
+      var fullscreenBtn = document.getElementById("fullscreen-btn");
       var unityInstancePromise;
 
       // Function to start the game
@@ -137,17 +156,43 @@
         playButton.style.display = "none";
         playerNameModal.style.display = "none";
         canvas.style.display = "block";
-        // unityInstance.SetFullscreen(1);
-        unityInstance.SendMessage("WebReceiver", "GoFullScreen");
+        unityInstance.SetFullscreen(1);
+        // unityInstance.SendMessage("WebReceiver", "GoFullScreen");
         
         // Enable capture blocking in Unity
         unityInstance.SendMessage("WebReceiver", "EnableCaptureBlocking");
+        
+        // Show fullscreen button after a short delay to check if we're actually in fullscreen
+        setTimeout(checkFullscreenStatus, 500);
+      }
+
+      // Function to check fullscreen status and show/hide button accordingly
+      function checkFullscreenStatus() {
+        const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
+                                document.mozFullScreenElement || document.msFullscreenElement);
+        fullscreenBtn.style.display = isFullscreen ? "none" : "flex";
+      }
+
+      // Function to enter fullscreen
+      function enterFullscreen() {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+          elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+          elem.msRequestFullscreen();
+        }
       }
 
       // Function to check and handle player name
       function checkPlayerName() {
         const storedName = localStorage.getItem('playerName');
         if (storedName && storedName.trim() !== '') {
+          // Send stored player name to Unity
+          unityInstance.SendMessage("WebReceiver", "SetMyName", storedName);
           startGame();
         } else {
           playerNameModal.style.display = "flex";
@@ -160,6 +205,8 @@
         const playerName = playerNameInput.value.trim();
         if (playerName !== '') {
           localStorage.setItem('playerName', playerName);
+          // Send player name to Unity
+          unityInstance.SendMessage("WebReceiver", "SetMyName", playerName);
           startGame();
         } else {
           alert('Bitte geben Sie einen gültigen Namen ein');
@@ -172,6 +219,15 @@
           confirmNameBtn.click();
         }
       });
+
+      // Fullscreen button click handler
+      fullscreenBtn.onclick = enterFullscreen;
+
+      // Listen for fullscreen changes to show/hide the button
+      document.addEventListener('fullscreenchange', checkFullscreenStatus);
+      document.addEventListener('webkitfullscreenchange', checkFullscreenStatus);
+      document.addEventListener('mozfullscreenchange', checkFullscreenStatus);
+      document.addEventListener('MSFullscreenChange', checkFullscreenStatus);
 
       unityInstancePromise = createUnityInstance(canvas, {
         arguments: [],
