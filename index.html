@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes" id="viewport-meta">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="viewport-fit=cover, user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     <title>Runner</title>
     <style>
       /* Modal styles */
@@ -68,6 +69,64 @@
         opacity: 0.8;
       }
       
+      /* iOS Safari fullscreen instruction modal */
+      #ios-fullscreen-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1004;
+      }
+      
+      #ios-fullscreen-dialog {
+        background: #2a3a38;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: left;
+        color: white;
+        font-family: Arial, sans-serif;
+        max-width: 90%;
+        width: 350px;
+        line-height: 1.5;
+      }
+      
+      #ios-fullscreen-dialog h2 {
+        color: #29d;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      
+      #ios-fullscreen-dialog ol {
+        padding-left: 20px;
+        margin: 15px 0;
+      }
+      
+      #ios-fullscreen-dialog li {
+        margin: 10px 0;
+        font-size: 14px;
+      }
+      
+      #ios-close-btn {
+        background: #29d;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 20px auto 0;
+        display: block;
+      }
+      
+      #ios-close-btn:hover {
+        background: #1a8cb8;
+      }
+      
       /* Fullscreen button styles */
       #fullscreen-btn {
         position: fixed;
@@ -95,29 +154,6 @@
         width: 20px;
         height: 20px;
         fill: #29d;
-      }
-      
-      /* iOS fullscreen styles */
-      .ios-fullscreen {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        z-index: 9999 !important;
-      }
-      
-      .ios-fullscreen canvas {
-        width: 100vw !important;
-        height: 100vh !important;
-      }
-      
-      /* Hide address bar on iOS */
-      @supports (-webkit-touch-callout: none) {
-        .ios-fullscreen {
-          height: 100vh !important;
-          height: -webkit-fill-available !important;
-        }
       }
     </style>
   </head>
@@ -151,6 +187,21 @@
       </div>
     </div>
 
+    <!-- iOS Safari fullscreen instruction modal -->
+    <div id="ios-fullscreen-modal">
+      <div id="ios-fullscreen-dialog">
+        <h2>Vollbildmodus auf iPhone/iPad</h2>
+        <p>So spielst du im Vollbildmodus auf iPhone oder iPad:</p>
+        <ol>
+          <li>Öffne das Spiel in Safari.</li>
+          <li>Tippe auf den Teilen-Button (Quadrat mit Pfeil nach oben).</li>
+          <li>Wähle „Zum Home-Bildschirm hinzufügen" aus.</li>
+          <li>Öffne das Spiel über das neue Symbol auf dem Home-Bildschirm – es wird im Vollbildmodus gestartet.</li>
+        </ol>
+        <button id="ios-close-btn">Verstanden</button>
+      </div>
+    </div>
+
     <!-- Fullscreen button -->
     <button id="fullscreen-btn" title="Enter Fullscreen">
       <svg viewBox="0 0 24 24">
@@ -173,63 +224,21 @@
       var playerNameInput = document.getElementById("player-name-input");
       var confirmNameBtn = document.getElementById("confirm-name-btn");
       var fullscreenBtn = document.getElementById("fullscreen-btn");
+      var iosFullscreenModal = document.getElementById("ios-fullscreen-modal");
+      var iosCloseBtn = document.getElementById("ios-close-btn");
       var unityInstancePromise;
-      var isIOSFullscreen = false;
 
-      // Detect iOS
-      function isIOS() {
-        return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      // Function to detect iOS Safari
+      function isIOSSafari() {
+        const ua = navigator.userAgent;
+        const isIOS = /iPad|iPhone|iPod/.test(ua);
+        const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|OPiOS|mercury/.test(ua);
+        return isIOS && isSafari;
       }
 
-      // iOS fullscreen implementation
-      function enterIOSFullscreen() {
-        const viewport = document.getElementById('viewport-meta');
-        const body = document.body;
-        const html = document.documentElement;
-        
-        // Modify viewport for fullscreen
-        viewport.setAttribute('content', 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, viewport-fit=cover');
-        
-        // Add fullscreen class
-        body.classList.add('ios-fullscreen');
-        html.classList.add('ios-fullscreen');
-        
-        // Hide address bar
-        window.scrollTo(0, 1);
-        
-        // Set flag
-        isIOSFullscreen = true;
-        
-        // Force canvas resize
-        setTimeout(() => {
-          if (window.unityInstance) {
-            canvas.style.width = '100vw';
-            canvas.style.height = '100vh';
-            window.unityInstance.SetFullscreen(1);
-          }
-        }, 100);
-        
-        fullscreenBtn.style.display = "none";
-      }
-
-      // Exit iOS fullscreen
-      function exitIOSFullscreen() {
-        const viewport = document.getElementById('viewport-meta');
-        const body = document.body;
-        const html = document.documentElement;
-        
-        // Restore viewport
-        viewport.setAttribute('content', 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes');
-        
-        // Remove fullscreen class
-        body.classList.remove('ios-fullscreen');
-        html.classList.remove('ios-fullscreen');
-        
-        // Set flag
-        isIOSFullscreen = false;
-        
-        fullscreenBtn.style.display = "flex";
+      // Function to check if running as standalone app (added to home screen)
+      function isStandalone() {
+        return window.navigator.standalone === true;
       }
 
       // Function to start the game
@@ -237,49 +246,49 @@
         loadingContainer.style.display = "none";
         playButton.style.display = "none";
         playerNameModal.style.display = "none";
+        iosFullscreenModal.style.display = "none";
         canvas.style.display = "block";
-        
-        if (isIOS()) {
-          enterIOSFullscreen();
-        } else {
-          unityInstance.SetFullscreen(1);
-          setTimeout(checkFullscreenStatus, 500);
-        }
+        unityInstance.SetFullscreen(1);
+        // unityInstance.SendMessage("WebReceiver", "GoFullScreen");
         
         // Enable capture blocking in Unity
         unityInstance.SendMessage("WebMessageReceiver", "EnableCaptureBlocking");
+        
+        // Show fullscreen button after a short delay to check if we're actually in fullscreen
+        setTimeout(checkFullscreenStatus, 500);
       }
 
       // Function to check fullscreen status and show/hide button accordingly
       function checkFullscreenStatus() {
-        if (isIOS()) {
-          fullscreenBtn.style.display = isIOSFullscreen ? "none" : "flex";
+        const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
+                                document.mozFullScreenElement || document.msFullscreenElement);
+        
+        // On iOS Safari (not standalone), show iOS instruction instead of regular fullscreen button
+        if (isIOSSafari() && !isStandalone() && !isFullscreen) {
+          fullscreenBtn.style.display = "none";
+          // Don't auto-show the modal, only show it when user clicks fullscreen
         } else {
-          const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
-                                  document.mozFullScreenElement || document.msFullscreenElement);
           fullscreenBtn.style.display = isFullscreen ? "none" : "flex";
         }
       }
 
       // Function to enter fullscreen
       function enterFullscreen() {
-        if (isIOS()) {
-          if (isIOSFullscreen) {
-            exitIOSFullscreen();
-          } else {
-            enterIOSFullscreen();
-          }
-        } else {
-          const elem = document.documentElement;
-          if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-          } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen();
-          } else if (elem.mozRequestFullScreen) {
-            elem.mozRequestFullScreen();
-          } else if (elem.msRequestFullscreen) {
-            elem.msRequestFullscreen();
-          }
+        // If iOS Safari (not standalone), show instruction modal instead
+        if (isIOSSafari() && !isStandalone()) {
+          iosFullscreenModal.style.display = "flex";
+          return;
+        }
+        
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+          elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+          elem.msRequestFullscreen();
         }
       }
 
@@ -320,29 +329,10 @@
       // Fullscreen button click handler
       fullscreenBtn.onclick = enterFullscreen;
 
-      // Listen for orientation changes on iOS
-      if (isIOS()) {
-        window.addEventListener('orientationchange', () => {
-          setTimeout(() => {
-            if (isIOSFullscreen) {
-              window.scrollTo(0, 1);
-              if (window.unityInstance) {
-                canvas.style.width = '100vw';
-                canvas.style.height = '100vh';
-              }
-            }
-          }, 500);
-        });
-
-        // Listen for viewport changes
-        window.addEventListener('resize', () => {
-          if (isIOSFullscreen) {
-            setTimeout(() => {
-              window.scrollTo(0, 1);
-            }, 100);
-          }
-        });
-      }
+      // iOS modal close button handler
+      iosCloseBtn.onclick = () => {
+        iosFullscreenModal.style.display = "none";
+      };
 
       // Listen for fullscreen changes to show/hide the button
       document.addEventListener('fullscreenchange', checkFullscreenStatus);
