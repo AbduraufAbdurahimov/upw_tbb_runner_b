@@ -160,7 +160,7 @@
         // unityInstance.SendMessage("WebReceiver", "GoFullScreen");
         
         // Enable capture blocking in Unity
-        unityInstance.SendMessage("WebReceiver", "EnableCaptureBlocking");
+        unityInstance.SendMessage("WebMessageReceiver", "EnableCaptureBlocking");
         
         // Show fullscreen button after a short delay to check if we're actually in fullscreen
         setTimeout(checkFullscreenStatus, 500);
@@ -192,7 +192,8 @@
         const storedName = localStorage.getItem('playerName');
         if (storedName && storedName.trim() !== '') {
           // Send stored player name to Unity
-          unityInstance.SendMessage("WebReceiver", "SetMyName", storedName);
+          unityInstance.SendMessage("WebMessageReceiver", "SetMyName", storedName);
+
           startGame();
         } else {
           playerNameModal.style.display = "flex";
@@ -206,7 +207,7 @@
         if (playerName !== '') {
           localStorage.setItem('playerName', playerName);
           // Send player name to Unity
-          unityInstance.SendMessage("WebReceiver", "SetMyName", playerName);
+          unityInstance.SendMessage("WebMessageReceiver", "SetMyName", playerName);
           startGame();
         } else {
           alert('Bitte geben Sie einen gültigen Namen ein');
