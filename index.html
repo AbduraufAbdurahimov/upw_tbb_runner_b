@@ -118,7 +118,8 @@
         playButton.style.display = "none";
         playerNameModal.style.display = "none";
         canvas.style.display = "block";
-        unityInstance.SetFullscreen(1);
+        // unityInstance.SetFullscreen(1);
+        unityInstance.SendMessage("WebReceiver", "GoFullScreen");
         
         // Enable capture blocking in Unity
         unityInstance.SendMessage("WebReceiver", "EnableCaptureBlocking");
