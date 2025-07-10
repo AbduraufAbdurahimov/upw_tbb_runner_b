@@ -7,173 +7,27 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="viewport-fit=cover, user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Runner</title>
-    <style>
-      /* Modal styles */
-      #player-name-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1002;
-      }
-      
-      #player-name-dialog {
-        background: #2a3a38;
-        padding: 30px;
-        border-radius: 15px;
-        text-align: center;
-        color: white;
-        font-family: Arial, sans-serif;
-      }
-      
-      #player-name-input {
-        width: 250px;
-        height: 40px;
-        padding: 0;
-        margin: 15px 0;
-        border: none;
-        border-radius: 0;
-        outline: none;
-        font-size: 16px;
-        text-align: center;
-        background-image: url('sv_inp.png');
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-position: center;
-        background-color: transparent;
-      }
-      
-      #confirm-name-btn {
-        background-image: url('sv_btn.png');
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        background-color: transparent;
-        border: none;
-        outline: none;
-        box-shadow: none;
-        cursor: pointer;
-        margin: 10px 0;
-        padding: 0;
-        min-width: 150px;
-        min-height: 80px;
-      }
-      
-      #confirm-name-btn:hover {
-        opacity: 0.8;
-      }
-      
-      /* iOS Safari fullscreen instruction modal */
-      #ios-fullscreen-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.9);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1004;
-      }
-      
-      #ios-fullscreen-dialog {
-        background: #2a3a38;
-        padding: 25px;
-        border-radius: 15px;
-        text-align: left;
-        color: white;
-        font-family: Arial, sans-serif;
-        max-width: 90%;
-        width: 350px;
-        line-height: 1.5;
-      }
-      
-      #ios-fullscreen-dialog h2 {
-        color: #29d;
-        margin-bottom: 20px;
-        text-align: center;
-      }
-      
-      #ios-fullscreen-dialog ol {
-        padding-left: 20px;
-        margin: 15px 0;
-      }
-      
-      #ios-fullscreen-dialog li {
-        margin: 10px 0;
-        font-size: 14px;
-      }
-      
-      #ios-close-btn {
-        background: #29d;
-        color: white;
-        border: none;
-        padding: 12px 30px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        margin: 20px auto 0;
-        display: block;
-      }
-      
-      #ios-close-btn:hover {
-        background: #1a8cb8;
-      }
-      
-      /* Fullscreen button styles */
-      #fullscreen-btn {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 40px;
-        height: 40px;
-        background: rgba(42, 58, 56, 0.8);
-        border: 2px solid #29d;
-        border-radius: 8px;
-        cursor: pointer;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1003;
-        transition: all 0.3s ease;
-      }
-      
-      #fullscreen-btn:hover {
-        background: rgba(42, 58, 56, 1);
-        transform: scale(1.1);
-      }
-      
-      #fullscreen-btn svg {
-        width: 20px;
-        height: 20px;
-        fill: #29d;
-      }
-    </style>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <title>Eikos Abenteuer</title>
   </head>
   <body style="text-align: left; padding: 0; border: 0; margin: 0; background-color: #1A2321;">
     
     <!-- Centered container for logo and loading bar -->
-    <div id="unity-loading-container" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); display:flex; flex-direction:column; align-items:center; gap:30px; z-index:1001;">
+    <div id="unity-loading-container">
       <!-- Logo -->
       <div id="unity-logo">
-        <img src="logo1.PNG" alt="Logo" style="max-width:500px; max-height:350px; width:auto; height:auto;">
+        <img src="logo1.PNG" alt="Logo">
       </div>
       
       <!-- Loading bar -->
-      <div id="unity-loading-bar" style="width:300px; height:20px; background:#444; border-radius:10px; padding:2px;">
+      <div id="unity-loading-bar">
         <div id="unity-progress-bar" style="width:0%; height:100%; background:#29d; border-radius:8px; transition:width 0.3s ease;"></div>
       </div>
 
       <!-- Play button -->
-      <div id="unity-play-button" style="width:180px; height:180px;  border:none; cursor:pointer; display:none; align-items:center; justify-content:center;">
-        <img src="sv_pl.png" alt="Play" style="width:180px; height:180px;">
+      <div id="unity-play-button">
+        <img src="sv_pl.png" alt="Play">
       </div>
     </div>
 
@@ -228,17 +82,35 @@
       var iosCloseBtn = document.getElementById("ios-close-btn");
       var unityInstancePromise;
 
-      // Function to detect iOS Safari
+      // Function to detect iOS devices (improved)
+      function isIOS() {
+        const ua = navigator.userAgent;
+        return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      }
+
+      // Function to detect iOS Safari (more reliable)
       function isIOSSafari() {
         const ua = navigator.userAgent;
-        const isIOS = /iPad|iPhone|iPod/.test(ua);
-        const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|OPiOS|mercury/.test(ua);
-        return isIOS && isSafari;
+        const isIOSDevice = isIOS();
+        
+        // Debug logging (remove in production)
+        console.log('User Agent:', ua);
+        console.log('Is iOS Device:', isIOSDevice);
+        console.log('Navigator standalone:', window.navigator.standalone);
+        
+        // On iOS, if it's not standalone and not a known non-Safari browser
+        if (isIOSDevice) {
+          // Check if it's NOT Chrome, Firefox, or other browsers on iOS
+          const isNotOtherBrowser = !/CriOS|FxiOS|OPiOS|mercury|DuckDuckGo|Edge/.test(ua);
+          return isNotOtherBrowser;
+        }
+        
+        return false;
       }
 
       // Function to check if running as standalone app (added to home screen)
       function isStandalone() {
-        return window.navigator.standalone === true;
+        return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
       }
 
       // Function to start the game
@@ -258,24 +130,28 @@
         setTimeout(checkFullscreenStatus, 500);
       }
 
-      // Function to check fullscreen status and show/hide button accordingly
+      // Function to check fullscreen status and show/hide button accordingly (updated)
       function checkFullscreenStatus() {
         const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || 
                                 document.mozFullScreenElement || document.msFullscreenElement);
         
-        // On iOS Safari (not standalone), show iOS instruction instead of regular fullscreen button
-        if (isIOSSafari() && !isStandalone() && !isFullscreen) {
+        // Hide fullscreen button on iOS devices (broader check)
+        if (isIOS()) {
           fullscreenBtn.style.display = "none";
-          // Don't auto-show the modal, only show it when user clicks fullscreen
         } else {
           fullscreenBtn.style.display = isFullscreen ? "none" : "flex";
         }
       }
 
-      // Function to enter fullscreen
+      // Function to enter fullscreen (improved iOS detection)
       function enterFullscreen() {
-        // If iOS Safari (not standalone), show instruction modal instead
-        if (isIOSSafari() && !isStandalone()) {
+        console.log('Enter fullscreen called');
+        console.log('Is iOS Safari:', isIOSSafari());
+        console.log('Is Standalone:', isStandalone());
+        
+        // If iOS and not standalone, show instruction modal instead
+        if (isIOS() && !isStandalone()) {
+          console.log('Showing iOS fullscreen modal');
           iosFullscreenModal.style.display = "flex";
           return;
         }
@@ -347,7 +223,7 @@
         codeUrl: "Build/upw_tbb_runner_b.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName:   "Gamenock",
-        productName:   "Runner",
+        productName:   "Eikos Abenteuer",
         productVersion:"1.8",
       },
       // progress callback:
